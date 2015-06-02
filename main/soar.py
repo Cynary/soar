@@ -1,33 +1,15 @@
 #!/usr/bin/python
-from __future__ import print_function
+from common import *
 import shlex
 import sys
 import time
+import string
+import random
 from subprocess import Popen,PIPE
-from threading import Thread,Event,Lock
 
-# Python 2/3 quirks
-try:
-    from Queue import Queue
-except ImportError:
-    from queue import Queue
-
-try:
-    input = raw_input
-except NameError:
-    pass
-
-threads = set()
-processes = set()
-process_lock = Lock()
-message_queue = Queue()
-soar_commands = {"CLOSE",""}
-stop = Event()
-subscribers = {'ALL':[]}
-subscribe_lock = Lock()
-
-def gen_garbage():
-    return "ALSKNDKLASD"
+def gen_garbage(n=20): # Hash does NOT have a ':' character
+    allowed = string.ascii_letters + string.digits
+    return ''.join(random.choice(allowed) for _ in range(n))
 
 def parse_message(message,hash,stdin):
     h,s,msg = message.partition(':')
@@ -36,8 +18,9 @@ def parse_message(message,hash,stdin):
         return
     topic,_,msg = msg.partition(':')
 
-    if topic == 'SUB':
-        topic_to_sub = msg[:-1]
+    if topic == SUB_MSG:
+        topic_to_sub = msg[:-1] # Note: topic MUST NOT have ':' characters
+        assert ':' not in topic_to_sub
         with subscribe_lock:
             if topic_to_sub not in subscribers:
                 subscribers[topic_to_sub] = []
@@ -106,21 +89,21 @@ def main(argv):
 
         while True:
             topic,message = message_queue.get()
-            if topic == "CLOSE":
+            if topic == CLOSE_MSG:
                 print("SOAR is closing now")
                 return 0
-            elif topic == "OPEN":
+            elif topic == OPEN_MSG:
                 t = Thread(target=process_thread,args=[message])
                 threads.add(t)
                 t.start()
             else:
                 # message variable ends in newline
                 for out in subscribers['ALL']:
-                    out.write(bytes("TOPIC:%s,MESSAGE:%s" % (topic,message),'UTF-8'))
+                    out.write(bytes("ALL:TOPIC:%s,MESSAGE:%s" % (topic,message),'UTF-8'))
                     out.flush()
                 if topic in subscribers:
                     for out in subscribers[topic]:
-                        out.write(bytes(message,'UTF-8'))
+                        out.write(bytes("%s:%s" % (topic,message),'UTF-8'))
     finally:
         # Cleanup
         print("SOAR is cleaning up")
@@ -133,4 +116,13 @@ def main(argv):
     return 1 # We should not be here unless an error happened
 
 if __name__ == "__main__":
+    threads = set()
+    processes = set()
+    process_lock = Lock()
+    message_queue = Queue()
+    soar_commands = {"CLOSE",""}
+    stop = Event()
+    subscribers = {'ALL':[]}
+    subscribe_lock = Lock()
+
     sys.exit(main(sys.argv))

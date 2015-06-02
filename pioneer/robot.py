@@ -1,8 +1,8 @@
+import time
 from math import *
 from serial import *
 from serial.tools.list_ports import comports
 from arcos import *
-import time
 from threading import Lock,Timer
 
 # Calculate checksum on P2OS packet (see Pioneer manual)

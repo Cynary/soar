@@ -1,3 +1,4 @@
+
 class RobotIO:
     def setForward(v):
         raise NotImplementedError("Set Forward is not implemented")
@@ -13,3 +14,5 @@ class RobotIO:
         raise NotImplementedError("Get Position is not implemented")
     def getAnalogInputs():
         raise NotImplementedError("Get Analog Inputs is not implemented")
+
+class SoarClient:
