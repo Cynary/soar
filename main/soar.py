@@ -1,11 +1,21 @@
 #!/usr/bin/python
-from common import *
+from __future__ import print_function
 import shlex
 import sys
 import time
 import string
 import random
 from subprocess import Popen,PIPE
+from soar.main.common import *
+
+threads = set()
+processes = set()
+process_lock = Lock()
+message_queue = Queue()
+soar_commands = {"CLOSE",""}
+stop = Event()
+subscribers = {'ALL':[]}
+subscribe_lock = Lock()
 
 def gen_garbage(n=20): # Hash does NOT have a ':' character
     allowed = string.ascii_letters + string.digits
@@ -16,7 +26,11 @@ def parse_message(message,hash,stdin):
     if s == '' or h != hash: # Not a SOAR message, just print, and continue
         print(message[:-1]) # take out the newline
         return
-    topic,_,msg = msg.partition(':')
+    topic,s,msg = msg.partition(':')
+    # Hack? What if the message is only the topic.
+    if s == '':
+        msg = '\n'
+        topic = topic[:-1]
 
     if topic == SUB_MSG:
         topic_to_sub = msg[:-1] # Note: topic MUST NOT have ':' characters
@@ -31,6 +45,9 @@ def parse_message(message,hash,stdin):
 def input_thread():
     while not stop.is_set():
         message = ':' + input() + '\n'
+        # Ignore empty messages
+        if message == ':\n':
+            continue
         parse_message(message,'',sys.stdin)
 
 def terminate_cleanly(p, shell_string):
@@ -85,7 +102,9 @@ def main(argv):
             threads.add(t)
             t.start()
         # Special direct input thread
-        Thread(target=input_thread, daemon=True).start()
+        special = Thread(target=input_thread)
+        special.daemon = True
+        special.start()
 
         while True:
             topic,message = message_queue.get()
@@ -116,13 +135,4 @@ def main(argv):
     return 1 # We should not be here unless an error happened
 
 if __name__ == "__main__":
-    threads = set()
-    processes = set()
-    process_lock = Lock()
-    message_queue = Queue()
-    soar_commands = {"CLOSE",""}
-    stop = Event()
-    subscribers = {'ALL':[]}
-    subscribe_lock = Lock()
-
     sys.exit(main(sys.argv))

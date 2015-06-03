@@ -2,7 +2,7 @@ import time
 from math import *
 from serial import *
 from serial.tools.list_ports import comports
-from arcos import *
+from soar.pioneer.arcos import *
 from threading import Lock,Timer
 
 # Calculate checksum on P2OS packet (see Pioneer manual)
@@ -48,8 +48,8 @@ class SIP:
         # 21 NOT USED IN 6.01 (Compass)
         # Sonars
         count = data[22]
-        sonars = {
-            data[i]: unpack_unsigned(*data[i+1:i+3])
+        self.sonars = {
+            data[i]: (lambda r: r if r != 5000 else None)(unpack_unsigned(*data[i+1:i+3]))
             for i in range(23,23+count*3,3)
         }
         # The rest is not important to 6.01

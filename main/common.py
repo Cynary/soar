@@ -1,10 +1,13 @@
-from __future__ import print_function
 from threading import Thread,Event,Lock
 # Python 2/3 quirks
 try:
     from Queue import Queue
 except ImportError:
     from queue import Queue
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 try:
     input = raw_input
