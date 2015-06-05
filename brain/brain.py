@@ -4,7 +4,7 @@ import soar.main.client as client
 import time
 
 class RobotClient(RobotIO):
-    def __init__(self,port=0): # x,y,theta position
+    def __init__(self,port=0):
         self.sonars = [None]*N_SONARS
         self.initial = (0,0,0)
         self.position = (0,0,0)
@@ -43,16 +43,13 @@ class RobotClient(RobotIO):
 
     def setForward(self,v):
         assert isinstance(v,(int,float)), "Forward velocity should be number"
-        msg = repr(v)
-        client.message(SPEED_TOPIC(self.port),msg)
+        client.message(SPEED_TOPIC(self.port),repr(v))
     def setRotational(self,omega):
         assert isinstance(omega,(int,float)), "Rotational velocity should be number"
-        msg = repr(omegax)
-        client.message(OMEGA_TOPIC(self.port),msg)
+        client.message(OMEGA_TOPIC(self.port),repr(omega))
     def setVoltage(self,v):
         assert isinstance(v,(int,float)), "Voltage should be number"
-        msg = repr(v)
-        client.message(VOLTAGE_TOPIC(self.port),msg)
+        client.message(VOLTAGE_TOPIC(self.port),repr(v))
     def stopAll(self):
         self.setForward(0)
         self.setRotational(0)

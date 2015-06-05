@@ -5,6 +5,9 @@ from serial.tools.list_ports import comports
 from soar.pioneer.arcos import *
 from threading import Lock,Timer
 
+MAX_RVEL = 0.5
+MAX_VEL = 0.5
+
 # Calculate checksum on P2OS packet (see Pioneer manual)
 def calc_checksum(data):
     c = 0
@@ -23,7 +26,15 @@ N_SONARS = 8
 THETA_CONV_FACTOR = 2*pi/4096.0
 unpack_unsigned = lambda l,h: l|(h<<8)
 unpack = lambda l,h: (lambda d: -((d^0xFFFF)+1) if (d>>15) == 1 else d)(l|(h<<8))
-class SIP:
+def unpack_string(data,i): # String starts at index i
+    stream = []
+    for j in range(i,len(data)):
+        if chr(data[j]) == '\0':
+            break
+        stream.append(chr(data[j]))
+    return ''.join(stream)
+
+class SIPPac:
     def __init__(self, data):
         self.size = len(data) # statistics
         assert len(data) == data[2]+3
@@ -78,6 +89,48 @@ class IOPac:
                              for i in range(12,12+count*2,2)] # V
         # Battery analog input
 
+class CONFIGPac:
+    def __init__(self, data):
+        self.size = len(data) # Statistics
+        assert len(data) == data[2]+3
+        # Header
+        assert data[0] == 0xFA
+        assert data[1] == 0xFB
+        # Type
+        assert data[3] == 0x20
+        # Robot type string
+        i = 4
+        self.type = unpack_string(data,i)
+        i += len(self.type)+1
+        # Subtype string
+        self.subtype = unpack_string(data,i)
+        i += len(self.subtype)+1
+        # Serial number string
+        self.sernum = unpack_string(data,i)
+        i += len(self.sernum)+1
+        # i we don't care about for 6.01 (antiquated)
+        i += 1
+        # Maximum maximum rotational velocity
+        self.the_very_max_omega = unpack(*data[i:i+2])
+        i += 2
+        # Maximum maximum forward velocity
+        self.the_very_max_v = unpack(*data[i:i+2])
+        i += 2
+        # i - i+5 we don't care
+        i += 6
+        # name given to the robot
+        self.name = unpack_string(data,i)
+        i += len(self.name)+1
+        # i - i+22 we don't care about for 6.01
+        i += 23
+        # Maximum omega
+        self.max_omega = unpack(*data[i:i+2])
+        i += 2
+        # Maximum v
+        self.max_v = unpack(*data[i:i+2])
+        i += 2
+        # We don't care about the rest for 6.01
+
 class Robot:
     def __init__(self, port = 0, timeout = 1.0):
         self.serial_lock = Lock()
@@ -104,10 +157,15 @@ class Robot:
         #
         self.command(OPEN)
         self.command(PULSE)
+        self.command(ENABLE,1) # Enable motors
+        self.recv_packet()
+
+        # Send CONFIG to get back the operational parameters of the robot.
+        #
+        self.command(CONFIG)
 
         # Send IOREQUEST command to start IO packet streaming
         #
-        self.recv_packet()
         self.command(IOREQUEST,2)
 
     # Connect to robot
@@ -234,7 +292,9 @@ class Robot:
                 if d[3] == 0xF0:
                     io_handler(IOPac(d))
                 elif (d[3]&0xF0) == 0x30:
-                    sip_handler(SIP(d))
+                    sip_handler(SIPPac(d))
+                elif (d[3] == 0x20):
+                    self.config = CONFIGPac(d)
                 else:
                     raise Exception("Unknown message type from Robot %d" % d[3])
             except AssertionError as e:

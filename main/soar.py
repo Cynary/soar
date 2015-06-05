@@ -86,7 +86,7 @@ def process_thread(shell_string):
         while p.poll() is None:
             message = p.stdout.readline().decode('UTF-8')
             if message == '' or message[-1] != '\n':
-                assert p.poll() is not None
+                p.wait()
                 print("Process %s died." % shell_string,
                       file=sys.stderr)
                 return
@@ -123,6 +123,7 @@ def main(argv):
                 if topic in subscribers:
                     for out in subscribers[topic]:
                         out.write(bytes("%s:%s" % (topic,message),'UTF-8'))
+                        out.flush()
     finally:
         # Cleanup
         print("SOAR is cleaning up")

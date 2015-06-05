@@ -24,6 +24,7 @@ class Command:
         assert isinstance(data,self.type)
         if self.type is int:
             self.arg = ARGINT if data >= 0 else ARGNINT
+            data = abs(data)
             self.data = [data&0xFF,(data>>8)]
         elif self.type is str:
             self.data = [ord(d) for d in data]
