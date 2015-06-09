@@ -5,6 +5,8 @@ import sys
 import time
 import string
 import random
+import io
+import os
 from subprocess import Popen,PIPE
 from soar.main.common import *
 
@@ -14,46 +16,39 @@ process_lock = Lock()
 message_queue = Queue()
 soar_commands = {"CLOSE",""}
 stop = Event()
-subscribers = {'ALL':[]}
+subscribers = {'ALL':set()}
 subscribe_lock = Lock()
 
-def gen_garbage(n=20): # Hash does NOT have a ':' character
-    allowed = string.ascii_letters + string.digits
+def gen_garbage(n=20): # Hash does NOT contain new lines
+    allowed = string.ascii_letters + string.digits + string.punctuation
     return ''.join(random.choice(allowed) for _ in range(n))
 
-def parse_message(message,hash,stdin):
-    h,s,msg = message.partition(':')
-    if s == '' or h != hash: # Not a SOAR message, just print, and continue
-        print(message[:-1]) # take out the newline
-        return
-    topic,s,msg = msg.partition(':')
-    # Hack? What if the message is only the topic.
-    if s == '':
-        msg = '\n'
-        topic = topic[:-1]
-
+def parse_message(topic,msg,stdin,sub_set):
     if topic == SUB_MSG:
-        topic_to_sub = msg[:-1] # Note: topic MUST NOT have ':' characters
-        assert ':' not in topic_to_sub
+        topic_to_sub = msg
         with subscribe_lock:
             if topic_to_sub not in subscribers:
-                subscribers[topic_to_sub] = []
-            subscribers[topic_to_sub].append(stdin)
+                subscribers[topic_to_sub] = set()
+            subscribers[topic_to_sub].add(stdin)
+            sub_set.add(topic_to_sub)
     else:
         message_queue.put((topic,msg))
 
 def input_thread():
     while not stop.is_set():
-        message = ':' + input() + '\n'
+        topics_sub = set()
+        message = input()
         # Ignore empty messages
         if message == ':\n':
             continue
-        parse_message(message,'',sys.stdin)
+        topic,_,msg = message.partition(':')
+        msg = eval(msg)
+        parse_message(topic,msg,sys.stdin,topics_sub)
 
 def terminate_cleanly(p, shell_string):
     if p.poll() is not None:
         return # Yay! we're done
-    print("Terminating process %s" % shell_string)
+    print("Cleanly terminating process %s" % shell_string)
     p.terminate()
     # Wait for it to terminate for WAIT_TIME
     #
@@ -73,25 +68,23 @@ WAIT_TIME = 1.0 # seconds
 def process_thread(shell_string):
     print("Launching process %s" % shell_string)
     args = shlex.split(shell_string)
-    p = Popen(args,stdin=PIPE,stdout=PIPE)
+    p = Popen(args,stdin=PIPE,stdout=PIPE,preexec_fn=os.setpgrp)
+    topics_sub=set()
     with process_lock:
         if stop.is_set():
             return
         processes.add((p,shell_string))
     try:
-        hash = gen_garbage()
-        p.stdin.write(bytes(hash+'\n','UTF-8'))
-        p.stdin.flush()
+        stdin = io.TextIOWrapper(p.stdin)
+        stdout = io.TextIOWrapper(p.stdout)
 
-        while p.poll() is None:
-            message = p.stdout.readline().decode('UTF-8')
-            if message == '' or message[-1] != '\n':
-                p.wait()
-                print("Process %s died." % shell_string,
-                      file=sys.stderr)
-                return
-            parse_message(message,hash,p.stdin)
+        for (topic,message) in s_load(stdout):
+            parse_message(topic,message,stdin,topics_sub)
+        print("Process %s has died" % shell_string)
     finally:
+        with subscribe_lock:
+            for topic in topics_sub:
+                subscribers[topic].remove(stdin)
         terminate_cleanly(p,shell_string)
 
 def main(argv):
@@ -116,13 +109,12 @@ def main(argv):
                 threads.add(t)
                 t.start()
             else:
-                # message variable ends in newline
                 for out in subscribers['ALL']:
-                    out.write(bytes("ALL:TOPIC:%s,MESSAGE:%s" % (topic,message),'UTF-8'))
+                    s_dump_elt(("ALL",(topic,message)),out)
                     out.flush()
                 if topic in subscribers:
                     for out in subscribers[topic]:
-                        out.write(bytes("%s:%s" % (topic,message),'UTF-8'))
+                        s_dump_elt((topic,message),out)
                         out.flush()
     finally:
         # Cleanup

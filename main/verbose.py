@@ -1,12 +1,10 @@
 #!/usr/bin/python
 import time
-import sys
+from soar.main.common import *
+import soar.main.client as client
 
-try:
-    input = raw_input
-except NameError:
-    pass
-hash = input()
-print(hash+":SUB:ALL")
-while True:
-    print(input(),file=sys.stderr)
+def printer(inp):
+    topic,message = inp
+    print("%s:%s" % (topic,message))
+client.keep_alive()
+client.subscribe("ALL",printer)

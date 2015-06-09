@@ -25,3 +25,4 @@ N_SONARS = 8
 N_ANALOG_INPUTS = 4
 
 INITIAL_TOPIC = lambda p: "SIM_INITIAL_%s" % str(p) # Simulator cheat
+COLLIDES_TOPIC = lambda p: "SIM_COLLIDING_%s" % str(p)

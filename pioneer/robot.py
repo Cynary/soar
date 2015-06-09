@@ -60,7 +60,7 @@ class SIPPac:
         # Sonars
         count = data[22]
         self.sonars = {
-            data[i]: (lambda r: r if r != 5000 else None)(unpack_unsigned(*data[i+1:i+3]))
+            data[i]: (lambda r: r if r < 5000 else None)(unpack_unsigned(*data[i+1:i+3]))
             for i in range(23,23+count*3,3)
         }
         # The rest is not important to 6.01
@@ -163,6 +163,10 @@ class Robot:
         # Send CONFIG to get back the operational parameters of the robot.
         #
         self.command(CONFIG)
+        d = self.recv_packet()
+        while d[3] != 0x20:
+            d = self.recv_packet()
+        self.config = CONFIGPac(d)
 
         # Send IOREQUEST command to start IO packet streaming
         #
