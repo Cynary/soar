@@ -1,6 +1,7 @@
 #!/usr/bin/python
+from __future__ import absolute_import
 import sys
-from soar.pioneer.robot import Robot
+from .robot import Robot
 from threading import Thread,Lock
 import time
 

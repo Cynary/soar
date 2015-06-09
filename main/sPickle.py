@@ -10,8 +10,6 @@ try:
   from cPickle import dumps, loads
 except ImportError:
   from pickle import dumps, loads
-import sys
-
 
 def s_dump(iterable_to_pickle, file_obj):
   '''dump contents of an iterable iterable_to_pickle to file_obj, a file
@@ -36,6 +34,10 @@ def s_load(file_obj):
     cur_elt.append(line)
     if line == '\n':
       pickled_elt_str = ''.join(cur_elt)
-      elt = loads(bytes(pickled_elt_str,'utf-8'))
+      try:
+        pickled_elt_str = bytes(pickled_elt_str,'utf-8')
+      except TypeError: # Stupid python 2/3 compatibility
+        pass
+      elt = loads(pickled_elt_str)
       cur_elt = []
       yield elt

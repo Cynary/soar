@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 from threading import Thread,Event,Lock
-from soar.main.sPickle import *
+from .sPickle import *
 
 # Python 2/3 quirks
 try:

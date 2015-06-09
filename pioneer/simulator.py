@@ -1,11 +1,15 @@
-from math import pi,sin,cos
+from __future__ import absolute_import
+
 from soar.brain.templates import *
 from soar.main.common import *
+from soar.gui.robot import parse_map
 import soar.main.client as client
+
 from getopt import getopt
 from threading import Event
-from soar.gui.robot import parse_map
+from math import pi,sin,cos
 import time
+import sys
 
 # Simulator limits
 MAX_V = 0.75

@@ -1,7 +1,8 @@
+from __future__ import absolute_import
 from math import pi
 from soar.brain.templates import *
 from soar.main.common import *
-from soar.pioneer.robot import *
+from .robot import *
 import soar.main.client as client
 from getopt import getopt
 

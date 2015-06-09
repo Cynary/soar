@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from __future__ import print_function
+from __future__ import absolute_import
 import shlex
 import sys
 import time
@@ -8,7 +9,7 @@ import random
 import io
 import os
 from subprocess import Popen,PIPE
-from soar.main.common import *
+from .common import *
 
 threads = set()
 processes = set()
@@ -26,6 +27,7 @@ def gen_garbage(n=20): # Hash does NOT contain new lines
 def parse_message(topic,msg,stdin,sub_set):
     if topic == SUB_MSG:
         topic_to_sub = msg
+        print("HERE")
         with subscribe_lock:
             if topic_to_sub not in subscribers:
                 subscribers[topic_to_sub] = set()
@@ -42,7 +44,10 @@ def input_thread():
         if message == ':\n':
             continue
         topic,_,msg = message.partition(':')
-        msg = eval(msg)
+        try:
+            msg = eval(msg)
+        except (SyntaxError,NameError):
+            pass
         parse_message(topic,msg,sys.stdin,topics_sub)
 
 def terminate_cleanly(p, shell_string):
@@ -68,15 +73,19 @@ WAIT_TIME = 1.0 # seconds
 def process_thread(shell_string):
     print("Launching process %s" % shell_string)
     args = shlex.split(shell_string)
-    p = Popen(args,stdin=PIPE,stdout=PIPE,preexec_fn=os.setpgrp)
+    p = Popen(args,stdin=PIPE,stdout=PIPE,preexec_fn=os.setpgrp,bufsize=0)
     topics_sub=set()
     with process_lock:
         if stop.is_set():
             return
         processes.add((p,shell_string))
     try:
-        stdin = io.TextIOWrapper(p.stdin)
-        stdout = io.TextIOWrapper(p.stdout)
+        try:
+            stdin = io.TextIOWrapper(p.stdin)
+            stdout = io.TextIOWrapper(p.stdout)
+        except AttributeError: # Python 2 error :(, this feels like a giant hack
+            stdin = p.stdin
+            stdout = p.stdout
 
         for (topic,message) in s_load(stdout):
             parse_message(topic,message,stdin,topics_sub)

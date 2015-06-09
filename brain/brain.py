@@ -1,4 +1,5 @@
-from soar.brain.templates import *
+from __future__ import absolute_import
+from .templates import *
 from soar.main.common import *
 import soar.main.client as client
 import time

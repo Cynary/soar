@@ -1,8 +1,9 @@
+from __future__ import absolute_import
 import time
 from math import *
 from serial import *
 from serial.tools.list_ports import comports
-from soar.pioneer.arcos import *
+from .arcos import *
 from threading import Lock,Timer
 
 # Calculate checksum on P2OS packet (see Pioneer manual)

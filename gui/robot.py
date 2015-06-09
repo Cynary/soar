@@ -1,15 +1,18 @@
 #!/usr/bin/python
+from __future__ import absolute_import
 try:
     from Tkinter import *
 except ImportError:
     from tkinter import *
-from getopt import getopt
-import math
-import soar.gui.robot_model as model
-import re
+
 from soar.main.common import *
 from soar.brain.templates import *
 import soar.main.client as client
+import soar.gui.robot_model as model
+
+from getopt import getopt
+import re
+import math
 
 floor = lambda *a: int(math.floor(*a))
 ceil = lambda *a: int(math.ceil(*a))
