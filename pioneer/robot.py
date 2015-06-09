@@ -5,9 +5,6 @@ from serial.tools.list_ports import comports
 from soar.pioneer.arcos import *
 from threading import Lock,Timer
 
-MAX_RVEL = 0.5
-MAX_VEL = 0.5
-
 # Calculate checksum on P2OS packet (see Pioneer manual)
 def calc_checksum(data):
     c = 0
