@@ -42,15 +42,15 @@ class RobotStatus(RobotIO):
         client.subscribe(SIM_STEP_MSG,self.step)
 
     def setForward(self,v):
-        assert isinstance(v,(int,float)), "Forward velocity should be number"
+        assert isinstance(v,numbers), "Forward velocity should be number"
         self.v = max(-MAX_V,min(MAX_V,v))
 
     def setRotational(self,omega):
-        assert isinstance(omega,(int,float)), "Rotational velocity should be number"
+        assert isinstance(omega,numbers), "Rotational velocity should be number"
         self.omega = max(-MAX_OMEGA,min(MAX_OMEGA, omega))
 
     def setVoltage(self,v):
-        assert isinstance(v,(int,float)), "Voltage should be number"
+        assert isinstance(v,numbers), "Voltage should be number"
         self.voltage = max(-10.,min(10,v))
 
     def setEnvironment(self,walls,w,h):
@@ -132,7 +132,7 @@ class RobotStatus(RobotIO):
             t1 = time.time()
             self.step(t1-t0)
             t0 = t1
-            time.sleep(max(0,0.01-(time.time()-t0)))
+            time.sleep(max(0,0.02-(time.time()-t0)))
 
 def main(argv):
     global status

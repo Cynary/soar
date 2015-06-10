@@ -13,6 +13,11 @@ try:
 except NameError:
     pass
 
+try:
+    numbers = (long,int,float)
+except NameError:
+    numbers = (int,float)
+
 SUB_MSG = 'SUB'
 CLOSE_MSG = 'CLOSE'
 OPEN_MSG = 'OPEN'

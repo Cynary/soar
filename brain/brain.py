@@ -44,13 +44,13 @@ class RobotClient(RobotIO):
         return self.analog_inputs[:]
 
     def setForward(self,v):
-        assert isinstance(v,(int,float)), "Forward velocity should be number"
+        assert isinstance(v,numbers), "Forward velocity should be number"
         client.message(SPEED_TOPIC(self.port),v)
     def setRotational(self,omega):
-        assert isinstance(omega,(int,float)), "Rotational velocity should be number"
+        assert isinstance(omega,numbers), "Rotational velocity should be number"
         client.message(OMEGA_TOPIC(self.port),omega)
     def setVoltage(self,v):
-        assert isinstance(v,(int,float)), "Voltage should be number"
+        assert isinstance(v,numbers), "Voltage should be number"
         client.message(VOLTAGE_TOPIC(self.port),v)
     def stopAll(self):
         self.setForward(0)

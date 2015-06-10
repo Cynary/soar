@@ -28,21 +28,21 @@ class RobotStatus(RobotIO):
         client.message(ANALOG_INPUTS_TOPIC(self.port),io_pac.analogInputs)
 
     def setForward(self,v):
-        assert isinstance(v,(int,float)), "Forward velocity should be number"
+        assert isinstance(v,numbers), "Forward velocity should be number"
         v = int(v*1000.) # Robot takes int, in mm/sec
         max_v = self.robot.config.max_v
         v = max(-max_v,min(max_v, v))
         self.robot.command(VEL,v)
 
     def setRotational(self,omega):
-        assert isinstance(omega,(int,float)), "Rotational velocity should be number"
+        assert isinstance(omega,numbers), "Rotational velocity should be number"
         omega = int(omega*180./pi) # Robot takes int, in deg/sec; 180 deg in pi rad
         max_omega = self.robot.config.max_omega
         omega = max(-max_omega,min(max_omega, omega))
         self.robot.command(RVEL,omega)
 
     def setVoltage(self,v):
-        assert isinstance(v,(int,float)), "Voltage should be number"
+        assert isinstance(v,numbers), "Voltage should be number"
         v = max(-10.,min(10,v))
         v = int(v*255./10.) # Robot takes int, in 0-255 for the first byte
         msg = (v&0xFF)<<8|0xFF # Second byte means we are setting everything

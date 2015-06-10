@@ -8,6 +8,9 @@ def get_dright_angle(r):
 
 def step(r):
     k = 3.
-    distance = r.getSonars()[3]
-    r.setForward(k*(distance-0.5))
+    distance = r.getSonars()[4]
+    if distance is None:
+        r.stopAll()
+    else:
+        r.setForward(k*(distance-0.5))
 brain.main(step,period=0.1)
