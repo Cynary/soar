@@ -60,7 +60,9 @@ class RobotStatus(RobotIO):
         for (x1,y1,x2,y2) in walls+limits:
             self.walls.append(geom.Segment(geom.Point(x1,y1),geom.Point(x2,y2)))
 
-    def step(self,dt):
+    def step(self,dt,expect_paused=True):
+        if expect_paused and (not self.paused.is_set()):
+            return
         x,y,theta = self.position
         x += self.v*cos(theta)*dt
         y += self.v*sin(theta)*dt
@@ -121,7 +123,7 @@ class RobotStatus(RobotIO):
         if msg == PAUSE_MSG:
             self.paused.set()
         elif msg == CONTINUE_MSG:
-            if not self.paused.is_set():
+            if self.paused.is_set():
                 self.paused.clear()
                 Thread(target=self.go).start()
         elif msg == STEP_MSG:
@@ -134,7 +136,7 @@ class RobotStatus(RobotIO):
         t0 = time.time()
         while not (self.paused.is_set() or self.stop.is_set()):
             t1 = time.time()
-            self.step(t1-t0)
+            self.step(t1-t0,expect_paused=False)
             t0 = t1
             time.sleep(max(0,0.02-(time.time()-t0)))
 
@@ -160,6 +162,7 @@ def main(argv):
 
     status = RobotStatus(initial,port)
     status.setEnvironment(walls,w,h)
+    status.paused.set()
     status.step(0) # For position, etc.
     client.keep_alive()
     return 0

@@ -119,14 +119,14 @@ def main(argv):
                     try:
                         s_dump_elt(("ALL",(topic,message)),out)
                         out.flush()
-                    except BrokenPipeError:
+                    except:
                         pass # ignore, we just killed this guy
                 if topic in subscribers:
                     for out in subscribers[topic]:
                         try:
                             s_dump_elt((topic,message),out)
                             out.flush()
-                        except BrokenPipeError:
+                        except:
                             pass # ignore, we just killed this guy
     finally:
         # Cleanup
