@@ -14,6 +14,13 @@ class RobotStatus(RobotIO):
         client.subscribe(SPEED_TOPIC(port),self.setForward)
         client.subscribe(OMEGA_TOPIC(port),self.setRotational)
         client.subscribe(VOLTAGE_TOPIC(port),self.setVoltage)
+        client.subscribe(BRAIN_MSG,self.brain_background)
+        client.subscribe(SIM_MSG,self.brain_background)
+
+    def brain_background(self,msg):
+        assert msg in (PAUSE_MSG,CONTINUE_MSG,STEP_MSG,CLOSE_MSG), "Message not recognized"
+        if msg == CLOSE_MSG:
+            self.robot.terminate()
 
     def go(self):
         self.robot.receive(self.__update_io__,self.__update_sip__)

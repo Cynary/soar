@@ -39,6 +39,7 @@ class RobotStatus(RobotIO):
         client.subscribe(VOLTAGE_TOPIC(port),self.setVoltage)
 
         client.subscribe(BRAIN_MSG,self.brain_background)
+        client.subscribe(SIM_MSG,self.brain_background)
         client.subscribe(SIM_STEP_MSG,self.step)
 
     def setForward(self,v):
@@ -158,8 +159,8 @@ def main(argv):
 
     status = RobotStatus(initial,port)
     status.setEnvironment(walls,w,h)
+    status.step(0) # For position, etc.
     client.keep_alive()
-    Thread(target=status.go).start()
     return 0
 
 if __name__ == "__main__":

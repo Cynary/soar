@@ -63,7 +63,9 @@ def brain_background(msg):
     assert not stop.is_set(), "The brain is terminated"
     assert msg in (PAUSE_MSG,CONTINUE_MSG,STEP_MSG,CLOSE_MSG), "Message not recognized"
     if msg == PAUSE_MSG:
-        g_timer.cancel()
+        if g_timer is not None:
+            g_timer.cancel()
+        g_robot.stopAll()
         paused.set()
     elif msg == CONTINUE_MSG:
         paused.clear()
@@ -73,6 +75,7 @@ def brain_background(msg):
         client.message(SIM_STEP_MSG,g_period)
     elif msg == CLOSE_MSG:
         terminate()
+        client.terminate()
 
 def step_thread():
     global stop,paused,g_period,g_step,g_robot,g_timer
@@ -96,11 +99,11 @@ def main(step,period=0.1,port=0):
     g_timer = None
     client.subscribe(BRAIN_MSG,brain_background)
     g_robot.sonars_updated.wait()
-    step_thread()
 
 def terminate():
     global stop,g_robot,g_timer
     stop.set()
-    g_timer.cancel()
+    if g_timer is not None:
+        g_timer.cancel()
     g_robot.stopAll()
     client.terminate()
