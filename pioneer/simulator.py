@@ -121,8 +121,9 @@ class RobotStatus(RobotIO):
         if msg == PAUSE_MSG:
             self.paused.set()
         elif msg == CONTINUE_MSG:
-            self.paused.clear()
-            Thread(target=self.go).start()
+            if not self.paused.is_set():
+                self.paused.clear()
+                Thread(target=self.go).start()
         elif msg == STEP_MSG:
             pass # Ignore
         elif msg == CLOSE_MSG:

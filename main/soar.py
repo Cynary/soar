@@ -86,6 +86,8 @@ def process_thread(shell_string):
             parse_message(topic,message,stdin,topics_sub)
         print("Process %s has died" % shell_string)
     finally:
+        p.stdin.close()
+        p.stdout.close()
         with subscribe_lock:
             for topic in topics_sub:
                 subscribers[topic].remove(stdin)
@@ -114,12 +116,18 @@ def main(argv):
                 t.start()
             else:
                 for out in subscribers['ALL']:
-                    s_dump_elt(("ALL",(topic,message)),out)
-                    out.flush()
+                    try:
+                        s_dump_elt(("ALL",(topic,message)),out)
+                        out.flush()
+                    except BrokenPipeError:
+                        pass # ignore, we just killed this guy
                 if topic in subscribers:
                     for out in subscribers[topic]:
-                        s_dump_elt((topic,message),out)
-                        out.flush()
+                        try:
+                            s_dump_elt((topic,message),out)
+                            out.flush()
+                        except BrokenPipeError:
+                            pass # ignore, we just killed this guy
     finally:
         # Cleanup
         print("SOAR is cleaning up")

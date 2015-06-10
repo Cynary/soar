@@ -73,7 +73,9 @@ class SoarUI(Tk):
         client.message(OPEN_MSG,BRAIN_PROC(self.brain))
 
     def brain_cmd(self):
-        self.brain = filedialog.askopenfilename(**self.file_opt)
+        new_brain = filedialog.askopenfilename(**self.file_opt)
+        if new_brain != '':
+            self.brain = new_brain
         client.message(BRAIN_MSG,CLOSE_MSG)
         client.message(OPEN_MSG,BRAIN_PROC(self.brain))
 
