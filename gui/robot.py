@@ -107,7 +107,7 @@ def parse_map(map_file):
     dim_regex = "dimensions\((%s),(%s)\)" % ((number,)*2)
     wall_regex = "wall\((\(%s,%s\)),(\(%s,%s\))\)" % ((number,)*4)
     initial_loc_regex = "initialRobotLoc\((%s),(%s)\)" % ((number,)*2)
-    initial_loc_theta_regex = "initialRobotLoc\((%s),(%s),(%s)\)" % ((number,)*3)
+    initial_loc_theta_regex = "initialRobotLoc\((%s),(%s),(.*)\)" % ((number,)*2)
 
     dim_pattern = re.compile(dim_regex)
     wall_pattern = re.compile(wall_regex)
