@@ -136,11 +136,12 @@ class Robot:
             # Find the port
             #
             ports = [p for p,desc,_ in comports() if 'PL2303' in desc]
+            assert port < len(ports), "The specified port does not exist, is the Robot connected?"
             port = ports[port]
         self.port = port
         self.timeout = timeout
         if not self.connect(port, timeout):
-            del self
+            self.__del__()
             raise Exception("Failed to connect to Robot")
 
         self.active = True
