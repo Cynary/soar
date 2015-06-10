@@ -8,7 +8,6 @@ def get_dright_angle(r):
 
 def step(r):
     k = 3.
-    distance,angle = get_dright_angle(r)
-    r.setRotational(0.)
-    r.setForward(10.)
+    distance = r.getSonars()[3]
+    r.setForward(k*(distance-0.5))
 brain.main(step,period=0.1)
