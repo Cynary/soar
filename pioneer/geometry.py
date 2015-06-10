@@ -86,7 +86,7 @@ class Segment:
         self.p2 = p2
 
     def distance(self,p,segment=True):
-        if not isinstance(p,Point,segment=True):
+        if not isinstance(p,Point):
             print("Can only calculate distance to Points")
             return NotImplemented
         # Return minimum distance between line segment, and point p
