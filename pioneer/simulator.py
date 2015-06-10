@@ -33,7 +33,6 @@ class RobotStatus(RobotIO):
         self.paused = Event()
         self.stop = Event()
 
-        client.message(INITIAL_TOPIC(port),initial)
         client.subscribe(SPEED_TOPIC(port),self.setForward)
         client.subscribe(OMEGA_TOPIC(port),self.setRotational)
         client.subscribe(VOLTAGE_TOPIC(port),self.setVoltage)
@@ -61,6 +60,7 @@ class RobotStatus(RobotIO):
             self.walls.append(geom.Segment(geom.Point(x1,y1),geom.Point(x2,y2)))
 
     def step(self,dt,expect_paused=True):
+        client.message(INITIAL_TOPIC(port),self.initial)
         if expect_paused and (not self.paused.is_set()):
             return
         x,y,theta = self.position
