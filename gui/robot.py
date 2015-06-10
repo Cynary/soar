@@ -71,8 +71,9 @@ class MapDraw(ResizingCanvas):
 
     def robot(self,x,y,theta):
         ix,iy,itheta = self.initial
-        self.position = (x+ix,y+iy,itheta+theta)
-        pos = (x+ix,y+iy,itheta+theta-math.pi/2.)
+        x,y = transform((ix,iy,itheta),(x,y))
+        self.position = (x,y,itheta+theta)
+        pos = (x,y,itheta+theta-math.pi/2.)
         coords = (transform(pos,point) for point in model.points)
         coords = [i for p in coords for i in self.pointToIndices(*p)]
         if self.robot_obj is not None:
@@ -135,9 +136,9 @@ def parse_map(map_file):
                                 eval(initial_loc_match.group(2)),\
                                 0.))
             if initial_loc_theta_match is not None:
-                initial_loc = ((eval(initial_loc_match.group(1)),\
-                                eval(initial_loc_match.group(2)),\
-                                eval(initial_loc_match.group(3))))
+                initial_loc = ((eval(initial_loc_theta_match.group(1)),\
+                                eval(initial_loc_theta_match.group(2)),\
+                                eval(initial_loc_theta_match.group(3))))
     return dims,walls,initial_loc
 
 def main(argv):
@@ -155,7 +156,7 @@ def main(argv):
 
     # Aspect ratio/dimensions
     w,h = 7.,7.
-    initial_loc = w/2.,h/2.,0
+    initial_loc = w/2.,h/2.,0.
     walls = []
     if map_file is not None:
         (w,h),walls,initial_loc = parse_map(map_file)

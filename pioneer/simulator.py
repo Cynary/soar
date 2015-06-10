@@ -68,7 +68,8 @@ class RobotStatus(RobotIO):
         # Check if we are colliding.
         # Build robot segments
         robot_segments = []
-        pos = (ix+x,iy+y,itheta+theta-pi/2.)
+        px,py = transform((ix,iy,itheta),(x,y))
+        pos = (px,py,itheta+theta-pi/2.)
         robot_points = (transform(pos,point) for point in model.points)
         prev = None
         first = None
@@ -94,7 +95,8 @@ class RobotStatus(RobotIO):
         # Create sonar beams in [MIN_SONAR_RANGE,MAX_SONAR_RANGE]
         # Then find the walls it collides with, and choose the nearest one.
         x,y,theta = self.position
-        pos = (ix+x,iy+y,itheta+theta)
+        px,py = transform((ix,iy,itheta),(x,y))
+        pos = (px,py,itheta+theta)
         for i,(sx,sy,stheta) in enumerate(model.sonar_poses):
             (x,y) = transform(pos,(sx,sy))
             origin = (x,y,itheta+theta+stheta)
