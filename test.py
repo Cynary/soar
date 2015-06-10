@@ -31,7 +31,11 @@ def step(r):
     k_theta = 1.5
     k_v = 1.5
     dist,angle = get_dright_angle(r)
-    danger = min((i for i in r.getSonars() if i is not None),default=1.)
+    ranges = [i for i in r.getSonars() if i is not None]
+    if len(ranges) == 0:
+        danger = 1.
+    else:
+        danger = min(ranges,default=1.)
     if angle is None:
         r.setRotational(1.0)
         r.setForward(danger*k_v)
