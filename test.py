@@ -35,7 +35,7 @@ def step(r):
     if len(ranges) == 0:
         danger = 1.
     else:
-        danger = min(ranges,default=1.)
+        danger = min(ranges)
     if angle is None:
         r.setRotational(1.0)
         r.setForward(danger*k_v)
