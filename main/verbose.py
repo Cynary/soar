@@ -8,7 +8,7 @@ import sys
 
 def printer(inp):
     topic,message = inp
-    print("%s:%s" % (topic,message))
+    print("VERBOSE:%s:%s" % (topic,message),file=sys.stderr)
     sys.stderr.flush()
 client.keep_alive()
 client.subscribe("ALL",printer)

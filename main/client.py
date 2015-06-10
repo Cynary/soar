@@ -1,13 +1,16 @@
 from __future__ import absolute_import
+from __future__ import print_function
 from .common import *
 from signal import signal,SIGTERM
 import sys
+import io
 
 initialized = False
 # Set to False if there's no main loop
 # Daemon threads die when the program dies
 # Non-daemon threads need to be explicitly killed, or program will block until they die
-__SOAR_STDOUT__ = sys.stdout
+__SOAR_INPUT__ = io.TextIOWrapper(io.BufferedReader(io.open(sys.stdin.fileno(),"rb",0)))
+__SOAR_STDOUT__ = io.TextIOWrapper(io.BufferedWriter(io.open(sys.stdout.fileno(),"wb",0)))
 __terminate__ = Event()
 
 def __init__():
@@ -54,7 +57,7 @@ def start_process(shell_string):
 
 def __recv_thread__():
     global __handlers__
-    for (topic,msg) in s_load(sys.stdin):
+    for (topic,msg) in s_load(__SOAR_INPUT__):
         assert topic in __handlers__
         __handlers__[topic](msg)
     # lost soar

@@ -24,7 +24,7 @@ def s_dump_elt(elt_to_pickle, file_obj):
   file_obj.write(pickled_elt_str)
   # record separator is a blank line
   # (since pickled_elt_str might contain its own newlines)
-  file_obj.write('\n\n')
+  file_obj.write(b'\n\n'.decode())
 
 def s_load(file_obj):
   '''load contents from file_obj, returning a generator that yields one
@@ -37,7 +37,7 @@ def s_load(file_obj):
       try:
         pickled_elt_str = bytes(pickled_elt_str,'utf-8')
       except TypeError: # Stupid python 2/3 compatibility
-        pass
+        pickled_elt_str = str(pickled_elt_str)
       elt = loads(pickled_elt_str)
       cur_elt = []
       yield elt

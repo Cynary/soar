@@ -12,6 +12,8 @@ class RobotClient(RobotIO):
         self.position = (0,0,0)
         self.analog_inputs = [None]*N_ANALOG_INPUTS
         self.port = port
+        self.sonars_updated = Event()
+        self.track_sonars = set(range(N_SONARS))
         client.subscribe(SONARS_TOPIC(port),self.__update_sonars__)
         client.subscribe(POSITION_TOPIC(port),self.__update_position__)
         client.subscribe(ANALOG_INPUTS_TOPIC(port),self.__update_analog_inputs__)
@@ -19,7 +21,10 @@ class RobotClient(RobotIO):
 
     def __update_sonars__(self,sonars):
         for i,r in sonars.items():
+            self.track_sonars.discard(i)
             self.sonars[i] = r/1000. if r is not None else r # Convert to meters
+        if not self.sonars_updated.is_set() and len(self.track_sonars) == 0:
+            self.sonars_updated.set()
     def getSonars(self):
         return self.sonars[:]
 
@@ -90,6 +95,7 @@ def main(step,period=0.1,port=0):
     g_period = period
     g_timer = None
     client.subscribe(BRAIN_MSG,brain_background)
+    g_robot.sonars_updated.wait()
     step_thread()
 
 def terminate():

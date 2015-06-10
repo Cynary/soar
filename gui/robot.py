@@ -19,6 +19,11 @@ ceil = lambda *a: int(math.ceil(*a))
 sin = math.sin
 cos = math.cos
 
+def transform(origin,point):
+    x,y,theta = origin
+    px,py = point
+    return (px*cos(theta) - py*sin(theta) + x),(px*sin(theta) + py*cos(theta) + y)
+
 # Based on code from
 # http://stackoverflow.com/questions/22835289/how-to-get-tkinter-canvas-to-dynamically-resize-to-window-width
 
@@ -64,16 +69,11 @@ class MapDraw(ResizingCanvas):
         x2,y2 = self.pointToIndices(x2,y2)
         self.create_line(x1,y1,x2,y2,fill="black",width=3)
 
-    def transform(self,origin,point):
-        x,y,theta = origin
-        px,py = point
-        return (px*cos(theta) - py*sin(theta) + x),(px*sin(theta) + py*cos(theta) + y)
-
     def robot(self,x,y,theta):
         ix,iy = self.initial
         self.position = (x+ix,y+iy,theta)
         pos = (x+ix,y+iy,theta-math.pi/2.)
-        coords = (self.transform(pos,point) for point in model.points)
+        coords = (transform(pos,point) for point in model.points)
         coords = [i for p in coords for i in self.pointToIndices(*p)]
         if self.robot_obj is not None:
             self.coords(self.robot_obj,*coords)
@@ -89,12 +89,14 @@ class MapDraw(ResizingCanvas):
             x,y,theta = model.sonar_poses[i]
             if r is None:
                 r = 0.
-            sonar_x,sonar_y = self.pointToIndices(*self.transform((px+x,py+y,ptheta+theta),(r/1000.,0)))
-            pixel_px,pixel_py = self.pointToIndices(px,py)
+            sonar_x,sonar_y = transform((px,py,ptheta),(x,y))
+            beam = transform((sonar_x,sonar_y,ptheta+theta),(r/1000.,0))
+            beam_x,beam_y = self.pointToIndices(*beam)
+            pixel_px,pixel_py = self.pointToIndices(sonar_x,sonar_y)
             if self.sonar_lines[i] is not None:
-                self.coords(self.sonar_lines[i],pixel_px,pixel_py,sonar_x,sonar_y)
+                self.coords(self.sonar_lines[i],pixel_px,pixel_py,beam_x,beam_y)
             else:
-                self.sonar_lines[i] = self.create_line(pixel_px,pixel_py,sonar_x,sonar_y,width=2,fill="black")
+                self.sonar_lines[i] = self.create_line(pixel_px,pixel_py,beam_x,beam_y,width=2,fill="black")
 
     def collision(self, colliding):
         self.robot_color = "red" if colliding else "black"

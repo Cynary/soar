@@ -27,7 +27,6 @@ def gen_garbage(n=20): # Hash does NOT contain new lines
 def parse_message(topic,msg,stdin,sub_set):
     if topic == SUB_MSG:
         topic_to_sub = msg
-        print("HERE")
         with subscribe_lock:
             if topic_to_sub not in subscribers:
                 subscribers[topic_to_sub] = set()
@@ -73,19 +72,15 @@ WAIT_TIME = 1.0 # seconds
 def process_thread(shell_string):
     print("Launching process %s" % shell_string)
     args = shlex.split(shell_string)
-    p = Popen(args,stdin=PIPE,stdout=PIPE,preexec_fn=os.setpgrp,bufsize=0)
+    p = Popen(args,stdin=PIPE,stdout=PIPE,preexec_fn=os.setpgrp,universal_newlines=True)
     topics_sub=set()
     with process_lock:
         if stop.is_set():
             return
         processes.add((p,shell_string))
     try:
-        try:
-            stdin = io.TextIOWrapper(p.stdin)
-            stdout = io.TextIOWrapper(p.stdout)
-        except AttributeError: # Python 2 error :(, this feels like a giant hack
-            stdin = p.stdin
-            stdout = p.stdout
+        stdin = io.TextIOWrapper(io.BufferedWriter(io.open(p.stdin.fileno(),"wb",0)))
+        stdout = io.TextIOWrapper(io.BufferedReader(io.open(p.stdout.fileno(),"rb",0)))
 
         for (topic,message) in s_load(stdout):
             parse_message(topic,message,stdin,topics_sub)

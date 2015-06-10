@@ -2,8 +2,10 @@ from __future__ import absolute_import
 
 from soar.brain.templates import *
 from soar.main.common import *
-from soar.gui.robot import parse_map
+from soar.gui.robot import parse_map,transform
+import soar.gui.robot_model as model
 import soar.main.client as client
+import soar.pioneer.geometry as geom
 
 from getopt import getopt
 from threading import Event
@@ -15,6 +17,9 @@ import sys
 MAX_V = 0.75
 MAX_OMEGA = pi/2.
 
+MIN_SONAR_RANGE = 0.05
+MAX_SONAR_RANGE = 1.5
+
 class RobotStatus(RobotIO):
     def __init__(self,initial=(0,0,0),port=0):
         self.port = port
@@ -23,6 +28,7 @@ class RobotStatus(RobotIO):
         self.voltage = 0.0
         self.position = (0,0,0)
         self.colliding = False
+        self.initial = initial
 
         self.paused = Event()
         self.stop = Event()
@@ -47,23 +53,66 @@ class RobotStatus(RobotIO):
         assert isinstance(v,(int,float)), "Voltage should be number"
         self.voltage = max(-10.,min(10,v))
 
+    def setEnvironment(self,walls,w,h):
+        self.walls = []
+        limits = [(0,0,w,0),(w,0,w,h),(w,h,0,h),(0,h,0,0)]
+        for (x1,y1,x2,y2) in walls+limits:
+            self.walls.append(geom.Segment(geom.Point(x1,y1),geom.Point(x2,y2)))
+
     def step(self,dt):
         x,y,theta = self.position
         x += self.v*cos(theta)*dt
         y += self.v*sin(theta)*dt
         theta += self.omega*dt
+        ix,iy,itheta = self.initial
         # Check if we are colliding.
+        # Build robot segments
+        robot_segments = []
+        pos = (ix+x,iy+y,itheta+theta-pi/2.)
+        robot_points = (transform(pos,point) for point in model.points)
+        prev = None
+        first = None
+        for p in robot_points:
+            if prev is not None:
+                robot_segments.append(geom.Segment(geom.Point(*prev),geom.Point(*p)))
+            else:
+                first = p
+            prev = p
+        robot_segments.append(geom.Segment(geom.Point(*prev),geom.Point(*first)))
+        for w in self.walls:
+            self.colliding = any(r.intersects(w) for r in robot_segments)
+            if self.colliding:
+                break
         # If we are, then don't move.
         client.message(COLLIDES_TOPIC(self.port),self.colliding)
-        if self.colliding:
-            return
-
-        self.position = (x,y,theta)
+        if not self.colliding:
+            self.position = (x,y,theta)
         client.message(POSITION_TOPIC(self.port),self.position)
 
         # Calculate sonars, and send them.
+        sonars = {}
+        # Create sonar beams in [MIN_SONAR_RANGE,MAX_SONAR_RANGE]
+        # Then find the walls it collides with, and choose the nearest one.
+        x,y,theta = self.position
+        pos = (ix+x,iy+y,itheta+theta)
+        for i,(sx,sy,stheta) in enumerate(model.sonar_poses):
+            (x,y) = transform(pos,(sx,sy))
+            origin = (x,y,itheta+theta+stheta)
+            p1 = geom.Point(*transform(origin,(MIN_SONAR_RANGE,0)))
+            p2 = geom.Point(*transform(origin,(MAX_SONAR_RANGE,0)))
+            beam = geom.Segment(p1,p2)
+            intersects = (beam.intersection_point(w) for w in self.walls)
+            intersects = (i for i in intersects if i is not None)
+            ranges = (p1.distance(i) for i in intersects)
+            try:
+                r = min(ranges)
+                r = int((r+MIN_SONAR_RANGE)*1000) # This is what the robot sends
+            except ValueError: # No intersections
+                r = None
+            sonars[i] = r
+        client.message(SONARS_TOPIC(self.port),sonars)
 
-    def brain_background(self):
+    def brain_background(self,msg):
         assert not self.stop.is_set(), "The simulator is terminated"
         assert msg in (PAUSE_MSG,CONTINUE_MSG,STEP_MSG,CLOSE_MSG), "Message not recognized"
         if msg == PAUSE_MSG:
@@ -83,7 +132,7 @@ class RobotStatus(RobotIO):
             t1 = time.time()
             self.step(t1-t0)
             t0 = t1
-            time.sleep(0.01)
+            time.sleep(max(0,0.01-(time.time()-t0)))
 
 def main(argv):
     global status
@@ -100,13 +149,14 @@ def main(argv):
             map_file = arg
 
     w,h = 7.,7.
-    initial_loc = w/2.,h/2.
+    initial = w/2.,h/2.,0
     walls = []
     if map_file is not None:
-        (w,h),walls,initial_loc = parse_map(map_file)
-
+        (w,h),walls,(ix,iy) = parse_map(map_file)
+        initial = (ix,iy,0)
 
     status = RobotStatus(initial,port)
+    status.setEnvironment(walls,w,h)
     client.keep_alive()
     Thread(target=status.go).start()
     return 0
