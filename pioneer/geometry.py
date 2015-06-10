@@ -86,7 +86,7 @@ class Segment:
         self.p2 = p2
 
     def distance(self,p):
-        if not isinstance(p,Point):
+        if not isinstance(p,Point,segment=True):
             print("Can only calculate distance to Points")
             return NotImplemented
         # Return minimum distance between line segment, and point p
@@ -99,10 +99,11 @@ class Segment:
         # We find projection of point p onto the line.
         # It falls where t = [(p-v) . (w-v)] / |w-v|^2
         t = (p-self.p1)*(self.p2-self.p1)/l2;
-        if (t < 0.0):
-            return self.p1.distance(p); # Beyond the 'v' end of the segment
-        elif (t > 1.0):
-            return self.p2.distance(p); # Beyond the 'w' end of the segment
+        if segment:
+            if (t < 0.0):
+                return self.p1.distance(p); # Beyond the 'v' end of the segment
+            elif (t > 1.0):
+                return self.p2.distance(p); # Beyond the 'w' end of the segment
         projection = self.p1 + v*t; # Projection falls on the segment
         return projection.distance(p);
 
