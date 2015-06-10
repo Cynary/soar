@@ -85,7 +85,7 @@ class Segment:
         self.p1 = p1
         self.p2 = p2
 
-    def distance(self,p):
+    def distance(self,p,segment=False):
         if not isinstance(p,Point,segment=True):
             print("Can only calculate distance to Points")
             return NotImplemented
