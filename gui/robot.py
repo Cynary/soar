@@ -18,6 +18,7 @@ floor = lambda *a: int(math.floor(*a))
 ceil = lambda *a: int(math.ceil(*a))
 sin = math.sin
 cos = math.cos
+pi = math.pi
 
 def transform(origin,point):
     x,y,theta = origin
@@ -105,10 +106,10 @@ class MapDraw(ResizingCanvas):
 def parse_map(map_file):
     number = "(?:\d+(?:\.(?:\d+)?)?)"
 
-    dim_regex = "dimensions\((%s),(%s)\)" % ((number,)*2)
-    wall_regex = "wall\((\(%s,%s\)),(\(%s,%s\))\)" % ((number,)*4)
-    initial_loc_regex = "initialRobotLoc\((%s),(%s)\)" % ((number,)*2)
-    initial_loc_theta_regex = "initialRobotLoc\((%s),(%s),(.*)\)" % ((number,)*2)
+    dim_regex = "dimensions\s*\(\s*(%s)\s*,\s*(%s)\s*\)" % ((number,)*2)
+    wall_regex = "wall\s*\(\s*(\(\s*%s\s*,\s*%s\s*\))\s*,\s*(\s*\(\s*%s\s*,\s*%s\s*\)\s*)\)" % ((number,)*4)
+    initial_loc_regex = "initialRobotLoc\s*\(\s*(%s)\s*,\s*(%s)\s*\)" % ((number,)*2)
+    initial_loc_theta_regex = "initialRobotLoc\s*\(\s*(%s)\s*,\s*(%s)\s*,(.*)\)" % ((number,)*2)
 
     dim_pattern = re.compile(dim_regex)
     wall_pattern = re.compile(wall_regex)
