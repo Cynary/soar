@@ -60,7 +60,7 @@ class RobotStatus(RobotIO):
             self.walls.append(geom.Segment(geom.Point(x1,y1),geom.Point(x2,y2)))
 
     def step(self,dt,expect_paused=True):
-        client.message(INITIAL_TOPIC(port),self.initial)
+        client.message(INITIAL_TOPIC(self.port),self.initial)
         if expect_paused and (not self.paused.is_set()):
             return
         x,y,theta = self.position

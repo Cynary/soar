@@ -71,7 +71,7 @@ class MapDraw(ResizingCanvas):
         self.create_line(x1,y1,x2,y2,fill="black",width=3)
 
     def robot(self,x,y,theta):
-        client.message(INITIAL_TOPIC(port),self.initial)
+        client.message(INITIAL_TOPIC(self.port),self.initial)
         ix,iy,itheta = self.initial
         x,y = transform((ix,iy,itheta),(x,y))
         self.position = (x,y,itheta+theta)
