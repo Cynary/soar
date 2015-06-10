@@ -70,9 +70,9 @@ class MapDraw(ResizingCanvas):
         self.create_line(x1,y1,x2,y2,fill="black",width=3)
 
     def robot(self,x,y,theta):
-        ix,iy = self.initial
-        self.position = (x+ix,y+iy,theta)
-        pos = (x+ix,y+iy,theta-math.pi/2.)
+        ix,iy,itheta = self.initial
+        self.position = (x+ix,y+iy,itheta+theta)
+        pos = (x+ix,y+iy,itheta+theta-math.pi/2.)
         coords = (transform(pos,point) for point in model.points)
         coords = [i for p in coords for i in self.pointToIndices(*p)]
         if self.robot_obj is not None:
@@ -107,10 +107,12 @@ def parse_map(map_file):
     dim_regex = "dimensions\((%s),(%s)\)" % ((number,)*2)
     wall_regex = "wall\((\(%s,%s\)),(\(%s,%s\))\)" % ((number,)*4)
     initial_loc_regex = "initialRobotLoc\((%s),(%s)\)" % ((number,)*2)
+    initial_loc_theta_regex = "initialRobotLoc\((%s),(%s),(%s)\)" % ((number,)*3)
 
     dim_pattern = re.compile(dim_regex)
     wall_pattern = re.compile(wall_regex)
     initial_loc_pattern = re.compile(initial_loc_regex)
+    initial_loc_theta_pattern = re.compile(initial_loc_theta_regex)
 
     walls = []
     initial_loc = None
@@ -120,6 +122,7 @@ def parse_map(map_file):
             dim_match = dim_pattern.search(line)
             wall_match = wall_pattern.search(line)
             initial_loc_match = initial_loc_pattern.search(line)
+            initial_loc_theta_match = initial_loc_theta_pattern.search(line)
 
             if dim_match is not None:
                 dims = (eval(dim_match.group(1)),eval(dim_match.group(2)))
@@ -128,7 +131,13 @@ def parse_map(map_file):
                 p2 = eval(wall_match.group(2))
                 walls.append(p1+p2)
             if initial_loc_match is not None:
-                initial_loc = ((eval(initial_loc_match.group(1)),eval(initial_loc_match.group(2))))
+                initial_loc = ((eval(initial_loc_match.group(1)),\
+                                eval(initial_loc_match.group(2)),\
+                                0.))
+            if initial_loc_theta_match is not None:
+                initial_loc = ((eval(initial_loc_match.group(1)),\
+                                eval(initial_loc_match.group(2)),\
+                                eval(initial_loc_match.group(3))))
     return dims,walls,initial_loc
 
 def main(argv):
@@ -146,7 +155,7 @@ def main(argv):
 
     # Aspect ratio/dimensions
     w,h = 7.,7.
-    initial_loc = w/2.,h/2.
+    initial_loc = w/2.,h/2.,0
     walls = []
     if map_file is not None:
         (w,h),walls,initial_loc = parse_map(map_file)

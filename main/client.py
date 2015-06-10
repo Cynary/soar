@@ -9,8 +9,8 @@ initialized = False
 # Set to False if there's no main loop
 # Daemon threads die when the program dies
 # Non-daemon threads need to be explicitly killed, or program will block until they die
-__SOAR_INPUT__ = io.TextIOWrapper(io.BufferedReader(io.open(sys.stdin.fileno(),"rb",0)))
-__SOAR_STDOUT__ = io.TextIOWrapper(io.BufferedWriter(io.open(sys.stdout.fileno(),"wb",0)))
+__SOAR_INPUT__ = io.TextIOWrapper(io.BufferedReader(io.open(sys.stdin.fileno(),"rb",0,closefd=False)))
+__SOAR_STDOUT__ = io.TextIOWrapper(io.BufferedWriter(io.open(sys.stdout.fileno(),"wb",0,closefd=False)))
 __terminate__ = Event()
 
 def __init__():

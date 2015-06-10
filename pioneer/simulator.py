@@ -149,11 +149,10 @@ def main(argv):
             map_file = arg
 
     w,h = 7.,7.
-    initial = w/2.,h/2.,0
+    initial = w/2.,h/2.,0.
     walls = []
     if map_file is not None:
-        (w,h),walls,(ix,iy) = parse_map(map_file)
-        initial = (ix,iy,0)
+        (w,h),walls,initial = parse_map(map_file)
 
     status = RobotStatus(initial,port)
     status.setEnvironment(walls,w,h)

@@ -79,8 +79,8 @@ def process_thread(shell_string):
             return
         processes.add((p,shell_string))
     try:
-        stdin = io.TextIOWrapper(io.BufferedWriter(io.open(p.stdin.fileno(),"wb",0)))
-        stdout = io.TextIOWrapper(io.BufferedReader(io.open(p.stdout.fileno(),"rb",0)))
+        stdin = io.TextIOWrapper(io.BufferedWriter(io.open(p.stdin.fileno(),"wb",0,closefd=False)))
+        stdout = io.TextIOWrapper(io.BufferedReader(io.open(p.stdout.fileno(),"rb",0,closefd=False)))
 
         for (topic,message) in s_load(stdout):
             parse_message(topic,message,stdin,topics_sub)
