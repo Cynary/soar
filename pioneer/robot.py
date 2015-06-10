@@ -135,7 +135,7 @@ class Robot:
         if isinstance(port,(int)):
             # Find the port
             #
-            ports = [p for p,desc,_ in comports() if 'PL2303' in desc]
+            ports = [p for p,desc,_ in comports() if 'Prolific' in desc]
             assert port < len(ports), "The specified port does not exist, is the Robot connected?"
             port = ports[port]
         self.port = port
