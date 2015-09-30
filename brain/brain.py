@@ -1,9 +1,11 @@
 from __future__ import absolute_import
 from .templates import *
-from soar.main.common import *
-import soar.main.client as client
+from ..main.common import *
+from ..main import client
 import time
 from threading import Event,Timer
+
+BRAIN_DEATH="BRAIN_DEATH"
 
 class RobotClient(RobotIO):
     def __init__(self,port=0):
@@ -71,18 +73,25 @@ def brain_background(msg):
         paused.clear()
         step_thread()
     elif msg == STEP_MSG:
-        g_step(g_robot)
+        try:
+            g_step(g_robot)
+        except:
+            terminate()
+            raise
         client.message(SIM_STEP_MSG,g_period)
     elif msg == CLOSE_MSG:
         terminate()
-        client.terminate()
 
 def step_thread():
     global stop,paused,g_period,g_step,g_robot,g_timer
     if stop.is_set() or paused.is_set():
         return
     start = time.time()
-    g_step(g_robot)
+    try:
+        g_step(g_robot)
+    except:
+        terminate()
+        raise
     if g_timer is not None:
         g_timer.cancel()
     g_timer = Timer(max(0.,g_period-(time.time()-start)), step_thread)
@@ -92,13 +101,13 @@ def main(step,period=0.1,port=0):
     global stop,paused,g_robot,g_step,g_period,g_timer
     paused = Event()
     stop = Event()
-    client.keep_alive()
     g_robot = RobotClient(port)
     g_step = step
     g_period = period
     g_timer = None
-    client.subscribe(BRAIN_MSG,brain_background)
     g_robot.sonars_updated.wait()
+    client.keep_alive()
+    client.subscribe(BRAIN_MSG,brain_background)
 
 def terminate():
     global stop,g_robot,g_timer
@@ -106,4 +115,5 @@ def terminate():
     if g_timer is not None:
         g_timer.cancel()
     g_robot.stopAll()
+    client.message(BRAIN_DEATH)
     client.terminate()

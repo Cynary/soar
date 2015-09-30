@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 import time
 from .common import *
-import soar.main.client as client
+from . import client
 import sys
 
 def printer(inp):

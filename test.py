@@ -45,4 +45,6 @@ def step(r):
         omega = k_theta*(desired_theta-angle)
         r.setRotational(omega)
         r.setForward(danger*k_v)
+    print("HERE")
+    assert False
 brain.main(step,period=0.1)

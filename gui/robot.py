@@ -5,10 +5,10 @@ try:
 except ImportError:
     from tkinter import *
 
-from soar.main.common import *
-from soar.brain.templates import *
-import soar.main.client as client
-import soar.gui.robot_model as model
+from ..main.common import *
+from ..brain.templates import *
+from ..main import client
+from . import robot_model as model
 
 from getopt import getopt
 import re

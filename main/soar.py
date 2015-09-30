@@ -122,7 +122,7 @@ def main(argv):
                     except:
                         pass # ignore, we just killed this guy
                 if topic in subscribers:
-                    for out in subscribers[topic]:
+                    for out in subscribers[topic].copy():
                         try:
                             s_dump_elt((topic,message),out)
                             out.flush()
