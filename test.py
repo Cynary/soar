@@ -29,7 +29,7 @@ def get_dright_angle(r):
 def step(r):
     k_d = 7.5
     k_theta = 1.5
-    k_v = 1.5
+    k_v = 0.5
     dist,angle = get_dright_angle(r)
     ranges = [i for i in r.getSonars() if i is not None]
     if len(ranges) == 0:
@@ -45,6 +45,6 @@ def step(r):
         omega = k_theta*(desired_theta-angle)
         r.setRotational(omega)
         r.setForward(danger*k_v)
-    print("HERE")
-    assert False
+    # print("HERE")
+    # assert False
 brain.main(step,period=0.1)
